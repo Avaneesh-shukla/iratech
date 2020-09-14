@@ -1,0 +1,60 @@
+*4*
+
+from django.db import models
+from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import BaseUserManager
+from django.contrib.auth.models import PermissionsMixin
+
+'''
+In this example, create usermodel who use email,password and phone number for login.
+Already added in settings.py:
+AUTH_USER_MODEL='irait.UserModel' 
+'''
+
+class UserModelManager(BaseUserManager):
+	def create_user(self, email, password, phone):
+		user = self.model()
+		user.phone = phone
+		user.email = self.normalize_email(email=email)
+		user.set_password(password)
+		user.save()
+		
+		return user
+
+	def create_superuser(self, email, password,phone):
+		'''
+		Used for: python manage.py createsuperuser
+		'''
+		user=self.model()
+		user.phone = phone
+		user.email = self.normalize_email(email=email)
+		user.set_password(password)
+		
+		user.is_staff = True
+		user.is_superuser = True
+		user.save()
+		
+		return user
+
+
+class UserModel(AbstractBaseUser, PermissionsMixin):
+	## Personnal fields.
+	email = models.EmailField(max_length=254, unique=True)
+	phone = models.IntegerField(max_length=10)
+	
+	
+	## Django manage fields.
+	date_joined = models.DateTimeField(auto_now_add=True)
+	is_active = models.BooleanField(default=True)
+	is_staff = models.BooleanField(default=False)
+	
+	USERNAME_FIELD = 'email'
+	REQUIRED_FIELD = ['email', 'password','phone']
+	
+	objects = UserModelManager() 
+
+	def __str__(self):
+		return self.email
+		
+	def get_phone(self):
+		return self.phone
